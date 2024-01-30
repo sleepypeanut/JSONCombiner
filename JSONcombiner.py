@@ -1,29 +1,64 @@
-#JSONCombiner.py
-#if running twice in same day, make sure to 
-
 import os
 import json
 from datetime import datetime
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import ttk
+from ttkthemes import ThemedStyle
 
-folder_path = "Files"
+class JSONCombinerGUI:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("JSON Combiner")
+        self.master.geometry("500x200")
 
-# List all files in the folder
-files = os.listdir("Files")
+        self.style = ThemedStyle(self.master)
+        self.style.set_theme("plastik")  # You can choose different themes
 
-python_objects = []
+        self.folder_path = tk.StringVar()
+        self.output_file = tk.StringVar()
 
+        ttk.Label(master, text="Select Folder:").grid(row=0, column=0, pady=10, padx=10, sticky="w")
+        ttk.Entry(master, textvariable=self.folder_path, width=30).grid(row=0, column=1, pady=10, padx=10, sticky="w")
+        ttk.Button(master, text="Browse", command=self.browse_folder).grid(row=0, column=2, pady=10, padx=10, sticky="w")
 
-# Loop through each file
-for file_name in files:
-    # Check if it's a file (not a subdirectory)
-    if os.path.isfile(os.path.join(folder_path, file_name)) and file_name.endswith('.json'):
-        # Process the file as needed
-        print(f"Processing file: {file_name}")
-        
-        # Example: Read the content of the file
-        with open(os.path.join(folder_path, file_name), 'r') as file:
-            python_objects.append(json.load(file))
+        ttk.Label(master, text="Output File:").grid(row=1, column=0, pady=10, padx=10, sticky="w")
+        ttk.Entry(master, textvariable=self.output_file, width=30).grid(row=1, column=1, pady=10, padx=10, sticky="w")
+        ttk.Button(master, text="Save As", command=self.save_as).grid(row=1, column=2, pady=10, padx=10, sticky="w")
 
-# Dump all the Python objects into a single JSON file.
-with open(os.path.join(f"combined_{datetime.now().strftime('%Y-%m-%d')}.json"), "w") as f:
-    json.dump(python_objects, f, indent=4)
+        ttk.Button(master, text="Combine JSON", command=self.combine_json).grid(row=2, column=1, pady=20, padx=10, sticky="ew")
+
+    def browse_folder(self):
+        folder_selected = filedialog.askdirectory()
+        self.folder_path.set(folder_selected)
+
+    def save_as(self):
+        file_selected = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+        self.output_file.set(file_selected)
+
+    def combine_json(self):
+        folder_path = self.folder_path.get()
+
+        if not os.path.exists(folder_path):
+            tk.messagebox.showerror("Error", "Selected folder does not exist.")
+            return
+
+        files = os.listdir(folder_path)
+        python_objects = []
+
+        for file_name in files:
+            if os.path.isfile(os.path.join(folder_path, file_name)) and file_name.endswith('.json'):
+                with open(os.path.join(folder_path, file_name), 'r') as file:
+                    python_objects.append(json.load(file))
+
+        output_file = self.output_file.get() or f"combined_{datetime.now().strftime('%Y-%m-%d')}.json"
+
+        with open(output_file, "w") as f:
+            json.dump(python_objects, f, indent=4)
+
+        tk.messagebox.showinfo("Success", "JSON files combined successfully.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = JSONCombinerGUI(root)
+    root.mainloop()
