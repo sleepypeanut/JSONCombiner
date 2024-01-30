@@ -1,4 +1,4 @@
-# JSONCombiner
+# JSON Combiner
 Combine Multiple JSON Files of the same structure
 
 ## Instructions:
